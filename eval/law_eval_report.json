@@ -1,0 +1,210 @@
+{
+  "eval_jsonl": "eval\\law_eval_set.jsonl",
+  "db_dir": "data\\db\\law",
+  "reports": [
+    {
+      "experiment": {
+        "name": "bm25_only",
+        "topk": 5,
+        "recall_factor": 4,
+        "fusion_method": "rrf",
+        "rrf_k": 60,
+        "bm25_weight": 1.0,
+        "emb_weight": 0.0,
+        "is_hyde": false
+      },
+      "n_samples": 100,
+      "metrics": {
+        "hit@k": 0.98,
+        "mrr@k": 0.975
+      },
+      "timing_sec": {
+        "hyde_mean": 0.0,
+        "search_mean": 0.17427497600001515,
+        "total_mean": 0.17427606300014303
+      },
+      "by_tag": {
+        "semantic": {
+          "hit@k": 0.9875,
+          "mrr@k": 0.98125,
+          "n": 80
+        },
+        "locate": {
+          "hit@k": 0.95,
+          "mrr@k": 0.95,
+          "n": 20
+        }
+      }
+    },
+    {
+      "experiment": {
+        "name": "emb_only",
+        "topk": 5,
+        "recall_factor": 4,
+        "fusion_method": "rrf",
+        "rrf_k": 60,
+        "bm25_weight": 0.0,
+        "emb_weight": 1.0,
+        "is_hyde": false
+      },
+      "n_samples": 100,
+      "metrics": {
+        "hit@k": 1.0,
+        "mrr@k": 0.9845
+      },
+      "timing_sec": {
+        "hyde_mean": 0.0,
+        "search_mean": 0.1363015169998107,
+        "total_mean": 0.13630261500060442
+      },
+      "by_tag": {
+        "semantic": {
+          "hit@k": 1.0,
+          "mrr@k": 0.990625,
+          "n": 80
+        },
+        "locate": {
+          "hit@k": 1.0,
+          "mrr@k": 0.96,
+          "n": 20
+        }
+      }
+    },
+    {
+      "experiment": {
+        "name": "hyde_emb_only",
+        "topk": 5,
+        "recall_factor": 4,
+        "fusion_method": "rrf",
+        "rrf_k": 60,
+        "bm25_weight": 0.0,
+        "emb_weight": 1.0,
+        "is_hyde": true
+      },
+      "n_samples": 100,
+      "metrics": {
+        "hit@k": 1.0,
+        "mrr@k": 0.9845
+      },
+      "timing_sec": {
+        "hyde_mean": 3.591758629000833,
+        "search_mean": 0.1659653550006624,
+        "total_mean": 3.757727229999873
+      },
+      "by_tag": {
+        "semantic": {
+          "hit@k": 1.0,
+          "mrr@k": 0.990625,
+          "n": 80
+        },
+        "locate": {
+          "hit@k": 1.0,
+          "mrr@k": 0.96,
+          "n": 20
+        }
+      }
+    },
+    {
+      "experiment": {
+        "name": "dedup_default",
+        "topk": 5,
+        "recall_factor": 4,
+        "fusion_method": "dedup",
+        "rrf_k": 60,
+        "bm25_weight": 1.0,
+        "emb_weight": 1.0,
+        "is_hyde": false
+      },
+      "n_samples": 100,
+      "metrics": {
+        "hit@k": 0.98,
+        "mrr@k": 0.975
+      },
+      "timing_sec": {
+        "hyde_mean": 0.0,
+        "search_mean": 1.2315197190002072,
+        "total_mean": 1.2315207989996997
+      },
+      "by_tag": {
+        "semantic": {
+          "hit@k": 0.9875,
+          "mrr@k": 0.98125,
+          "n": 80
+        },
+        "locate": {
+          "hit@k": 0.95,
+          "mrr@k": 0.95,
+          "n": 20
+        }
+      }
+    },
+    {
+      "experiment": {
+        "name": "rrf_default",
+        "topk": 5,
+        "recall_factor": 4,
+        "fusion_method": "rrf",
+        "rrf_k": 60,
+        "bm25_weight": 1.0,
+        "emb_weight": 1.0,
+        "is_hyde": false
+      },
+      "n_samples": 100,
+      "metrics": {
+        "hit@k": 0.99,
+        "mrr@k": 0.9825
+      },
+      "timing_sec": {
+        "hyde_mean": 0.0,
+        "search_mean": 0.9356858739997551,
+        "total_mean": 0.9356867500001681
+      },
+      "by_tag": {
+        "semantic": {
+          "hit@k": 1.0,
+          "mrr@k": 0.990625,
+          "n": 80
+        },
+        "locate": {
+          "hit@k": 0.95,
+          "mrr@k": 0.95,
+          "n": 20
+        }
+      }
+    },
+    {
+      "experiment": {
+        "name": "hyde_rrf_default",
+        "topk": 5,
+        "recall_factor": 4,
+        "fusion_method": "rrf",
+        "rrf_k": 60,
+        "bm25_weight": 1.0,
+        "emb_weight": 1.0,
+        "is_hyde": true
+      },
+      "n_samples": 100,
+      "metrics": {
+        "hit@k": 0.99,
+        "mrr@k": 0.9825
+      },
+      "timing_sec": {
+        "hyde_mean": 3.571415069000068,
+        "search_mean": 0.19919397600082447,
+        "total_mean": 3.7706123099999966
+      },
+      "by_tag": {
+        "semantic": {
+          "hit@k": 1.0,
+          "mrr@k": 0.990625,
+          "n": 80
+        },
+        "locate": {
+          "hit@k": 0.95,
+          "mrr@k": 0.95,
+          "n": 20
+        }
+      }
+    }
+  ]
+}
