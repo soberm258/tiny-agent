@@ -41,7 +41,6 @@ class _State(TypedDict, total=False):
     draft: str  # 最终 Markdown 报告（模板+连续编号+引用列表）
     passed: bool  # Verifier 是否通过
     issues: List[str]  # Verifier 问题列表（用于“质检提示”）
-    round: int  # 回合计数（控制最多补充检索/重写次数）
 
 
 def _build_model(streaming: bool = False) -> ChatOpenAI:
@@ -195,7 +194,7 @@ def _rag_items_to_evidence(*, obs: str, db: str, query: str, max_items: int = 5)
         if db == "law":
             title = _law_title_from_source_and_snippet(source=src, snippet=text)
         elif "|" in src:
-            title = src.split("|")[-1].strip()
+            title = src.split("|")[1].strip()
         if not title:
             title = f"rag_search({db})"
         ####
@@ -208,7 +207,7 @@ def _rag_items_to_evidence(*, obs: str, db: str, query: str, max_items: int = 5)
                 source_type="rag",
                 source=src,
                 title=title,
-                snippet=_truncate(text, 10000),
+                snippet=_truncate(text, 2000),
                 meta={"query": query, "rank": rank} if rank else {"query": query},
             )
         )
@@ -277,7 +276,7 @@ def _renumber_sections_and_refs(
         snippet = re.sub(r"\s+", " ", str(ev.snippet or "").strip())
         if len(snippet) > 140:
             snippet = snippet[:140].rstrip() + "…"
-        line = f"[{new_id}] {title} source={ev.source}".strip()
+        line = f"[{new_id}] {title}\nsource_type={ev.source_type}\nsource={ev.source}".strip()
         if snippet:
             line = f"{line}\n证据摘录：{snippet}"
         refs_lines.append(line)
@@ -395,7 +394,7 @@ def _plan_node(state: _State) -> _State:
     )
     # 理想情况下llm输出： resp['content'] = {"sub_questions":[{"question": "...", "rag_query": "...", "web_query": "..."}...]}
     # 但是如果大模型不听话也需要考虑处理 _parse_plan
-    plan_items = _parse_plan(getattr(resp, "content", "") or "")[:4]
+    plan_items = _parse_plan(getattr(resp, "content", "") or "")[:]
     return {"plan": plan_items, "round": int(state.get("round") or 0)}
 
 
@@ -404,7 +403,7 @@ def _research_node(state: _State) -> _State:
     dbs = _extract_db_hint(task)
     plan_items = state.get("plan") or []
     evidence: List[Evidence] = list(state.get("evidence") or [])
-    for item in plan_items[:4]:
+    for item in plan_items[:]:
         q_rag = (item.rag_query or item.question or "").strip()
         q_web = (item.web_query or item.question or "").strip()
 
@@ -418,6 +417,17 @@ def _research_node(state: _State) -> _State:
             results = web_obj.get("results") or []
         except Exception:
             results = []
+            web_obj = {}
+        if not results and isinstance(web_obj, dict) and web_obj.get("error"):
+            evidence.append(
+                Evidence(
+                    source_type="web",
+                    source="web_search",
+                    title="web_search 失败",
+                    snippet=_truncate(str(web_obj.get("error") or ""), 800),
+                    meta={"query": q_web, "provider": "mcp-serpapi"},
+                )
+            )
         for r in results[:2]:
             url = str(r.get("url") or "").strip()
             if not url:
@@ -430,7 +440,7 @@ def _research_node(state: _State) -> _State:
                 meta={"query": q_web, "provider": str(r.get("provider") or "")},
             )
             evidence.append(ev)
-            fetched = web_fetch.invoke({"url": url, "max_chars": 10000})
+            fetched = web_fetch.invoke({"url": url, "max_chars": 5000})
             try:
                 fobj = json.loads(fetched)
                 if fobj.get("error"):
@@ -486,6 +496,10 @@ def _write_node(state: _State) -> _State:
                  +(("\n\n" + extra) if extra else "")},
             ]
         )
+        #
+        # print(f"\n{messages[1]['content']}\n")
+
+        # print(f"\nWriter output:\n{getattr(resp, 'content', '')}\n")
         return getattr(resp, "content", "") or ""
 
     raw = call_writer()
@@ -538,6 +552,11 @@ def _verify_node(state: _State) -> _State:
     model = _build_model(streaming=False)
     draft = state.get("draft", "")
     evidence = state.get("evidence") or []
+    # 记录一下检索到的全部证据，方便调试对照。正式环境可以去掉这个文件写入
+    evid = "\n".join( e.full_text(i) for i,e in enumerate(evidence,start = 1))
+    with open('.//.tmp//cites.txt', 'w', encoding='utf-8') as f:
+        f.write(evid)
+
     citation_old_ids = [int(x) for x in (state.get("citation_old_ids") or []) if isinstance(x, int) or str(x).isdigit()]
     evidence_by_old_id = {i: ev for i, ev in enumerate(evidence, start=1)}
     if citation_old_ids:
@@ -545,6 +564,7 @@ def _verify_node(state: _State) -> _State:
     else:
         cited_evs = evidence
     cites = "\n".join(e.full_text(i) for i, e in enumerate(cited_evs, start=1))
+    
     payload = f"【报告草稿】\n{draft}\n\n【证据池（供对照）】\n{cites}\n"
     resp = model.invoke(
         [
@@ -564,26 +584,12 @@ def _verify_node(state: _State) -> _State:
         passed = False
         issues = ["质检输出无法解析为JSON，建议补充证据并重写。"]
         needed = []
+    # print(f"\nVerifier issues: {issues}\nNeeded queries: {needed}\n")
     return {
         "passed": passed,
         "issues": [str(x) for x in issues],
         "needed_queries": [str(x) for x in needed],
     }
-
-
-def _needs_more(state: _State) -> str:
-    if state.get("passed"):
-        return "end"
-    if int(state.get("round") or 0) >= 1:
-        return "end"
-    return "more"
-
-
-def _research_more_node(state: _State) -> _State:
-    needed = state.get("needed_queries") or []
-    plan_items = [DeepResearchPlanItem(question=q, rag_query=q, web_query=q) for q in needed[:3] if str(q).strip()]
-    return {"plan": plan_items, "round": int(state.get("round") or 0) + 1}
-
 
 def _build_graph():
     g = StateGraph(_State)
@@ -591,13 +597,12 @@ def _build_graph():
     g.add_node("research", _research_node)
     g.add_node("write", _write_node)
     g.add_node("verify", _verify_node)
-    g.add_node("research_more", _research_more_node)
     g.set_entry_point("plan")
     g.add_edge("plan", "research")
     g.add_edge("research", "write")
     g.add_edge("write", "verify")
-    g.add_conditional_edges("verify", _needs_more, {"more": "research_more", "end": END})
-    g.add_edge("research_more", "research")
+    # 线上模式：保证可预测、不卡住。无论质检是否通过，都直接结束并输出草稿 + 质检提示。
+    g.add_edge("verify", END)
     return g.compile()
 
 

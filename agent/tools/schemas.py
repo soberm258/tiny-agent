@@ -29,7 +29,7 @@ class Evidence(BaseModel):
     def full_text(self,idx: int) -> str:
         title = self.title.strip() or "证据"
         snippet = (self.snippet or "").strip()
-        return f"[{idx}] {title} source={self.source}\n{snippet}".strip()
+        return f"[{idx}] {title}\nsource_type={self.source_type} \nsource={self.source}\n{snippet}".strip()
 
 class DeepResearchPlanItem(BaseModel):
     question: str

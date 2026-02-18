@@ -106,6 +106,8 @@ def parse_cn_law_text(text: str, *, source_path: str) -> List[Dict[str, Any]]:
             "article": cur_article,
             "record_index": article_num,
         }
+        # if cur_article =="第一百三十三条之一":
+        #     print(f"text:{body},meta:{meta}")
         docs.append({"text": body, "meta": meta})
         cur_article = ""
         buf = []
@@ -148,12 +150,10 @@ def parse_cn_law_text(text: str, *, source_path: str) -> List[Dict[str, Any]]:
             if add:
                 cur_article = f"{cur_article}之{add.group(1)}"
                 rest =  (add.group(2) or "").strip()
-                print(cur_article)
+                # print(cur_article)
             buf = [f"{cur_article} {rest}".strip()] if rest else [cur_article]
             continue
-
-        if cur_article:
-            buf.append(line)
+        
         m = _RE_ATTACHMENT.match(line)
         if m:
             flush()

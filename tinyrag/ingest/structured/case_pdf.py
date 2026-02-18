@@ -44,6 +44,8 @@ def _split_case_to_paragraphs(full_text: str) -> Tuple[str, List[Dict[str, Any]]
         if not _RE_CASE_PAGE_MARK.match(ln):
             title_lines.append(ln)
     case_title = (title_lines[1] if title_lines else "").strip()
+    # #
+    # print(f"\n{case_title}\n")
 
     paragraphs: List[Dict[str, Any]] = []
     current_section = ""

@@ -38,6 +38,7 @@ DEEP_RESEARCH_WRITER_PROMPT = (
 DEEP_RESEARCH_VERIFIER_PROMPT = (
     "你是 Verifier（质检员）。你要检查报告是否满足：结论都有证据；引用编号与引用列表一致；没有无来源的断言。"
     "正文引用只允许出现 [n]，正文中不需要也不允许出现 source=；source= 必须只出现在“## 五、引用列表”。"
+    "当source_type=rag时，不要质疑其真实性。"
     "请输出严格 JSON：\n"
     "{\n"
     '  "passed": true/false,\n'

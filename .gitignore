@@ -1,11 +1,9 @@
 models
-tiny-rag-advanced.txt
 __pycache__
 .tmp
-help.txt
 config
-help.docx
-law_big
-law_huge
 .env
 agent_memory
+.gradio
+.pytest_cache
+r.txt
