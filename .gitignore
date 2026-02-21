@@ -2,7 +2,6 @@ models
 __pycache__
 .tmp
 config
-.env
 agent_memory
 .gradio
 .pytest_cache
