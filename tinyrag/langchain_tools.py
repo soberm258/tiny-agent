@@ -61,6 +61,7 @@ class RAGSearchInput(BaseModel):
     db_name: Literal["law", "case"] = Field(description="数据库名：law 或 case（必填）")
     is_hyde: bool = Field(default=False, description="是否启用 HyDE 查询扩展用于向量检索（默认 False）")
 
+
 @tool("rag_search", args_schema=RAGSearchInput)
 def rag_search(query: str, topk: int = 5, db_name: str = "law", is_hyde: bool = False) -> str:
     """

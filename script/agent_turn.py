@@ -83,7 +83,7 @@ def build_runtime() -> Runtime:
         base_url=base_url,
         api_key=api_key,
         streaming=True,
-        extra_body={"enable_thinking": True},
+        extra_body={"enable_thinking": False},
     )
     tools = [
         rag_search,
@@ -148,7 +148,7 @@ def _evidence_from_tool(tool_name: str, tool_output_text: str) -> List[EvidenceI
 
 def _evidence_key(it: EvidenceItem) -> str:
     raw = (
-        f"{it.kind}\n{it.tool}\n{it.source}\n{it.title}\n{it.snippet}".encode("utf-8", errors="ignore")
+        f"{it.kind}\n{it.tool}\n{it.source}".encode("utf-8", errors="ignore")
     )
     return hashlib.sha1(raw).hexdigest()
 

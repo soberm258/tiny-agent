@@ -63,7 +63,7 @@ def _render_evidence_md(items: List[EvidenceItem]) -> str:
         src = _compact_text(it.source, limit=120)
         snippet = (it.snippet or "").strip()
         snippet = snippet if len(snippet) <= 200 else snippet[:200].rstrip() + "……"
-        lines.append(f"{i}. **{title}**")
+        lines.append(f"{i}. ")
         if src:
             lines.append(f"来源：{src}")
         if snippet:
